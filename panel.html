@@ -31,46 +31,21 @@
     .right-section .btn-logout { margin-left: 8px; padding: 10px 16px; }
 
     /* ==== Sección de video ==== */
-    .video-card {
-      margin-top: 22px;
-      background: rgba(25,25,25,.7);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      padding:16px;
-    }
-    .video-card h3 {
-      margin-bottom: 10px;
-      color:#ffd4d4;
-    }
-    .video-wrap {
-      width: 100%;
-      aspect-ratio: 16 / 9;     /* responsive */
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      border:1px solid rgba(255,255,255,.08);
-    }
-    .video-wrap video, .video-wrap iframe {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      background: #000;
+    .video-card { margin-top: 22px; background: rgba(25,25,25,.7); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px; }
+    .video-card h3 { margin-bottom: 10px; color:#ffd4d4; }
+    .video-wrap { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; border:1px solid rgba(255,255,255,.08); }
+    .video-wrap video, .video-wrap iframe { width: 100%; height: 100%; display: block; object-fit: cover; background: #000; }
+
+    /* Centrar el botón "Canjear puntos" */
+    .redeem-wrap{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 16px 0 24px;
     }
 
-
-       /* Centrar el botón en el contenido */
-.redeem-wrap{
-  display: flex;
-  justify-content: center; /* centra horizontal */
-  align-items: center;      /* centra vertical dentro de la fila */
-  margin: 16px 0 24px;
-}
-a { text-decoration: none; }
-a:hover { text-decoration: none; }
-
-
-
+    a { text-decoration: none; }
+    a:hover { text-decoration: none; }
   </style>
 </head>
 <body class="bg-animated">
@@ -94,9 +69,10 @@ a:hover { text-decoration: none; }
         <div><strong id="statVisitas">0</strong></div>
       </div>
       <div class="stat">
-        <h4>⭐ Puntos activos</h4>
+        <h4>⭐ Puntos disponibles</h4>
         <div><strong id="statPuntosActivos">0</strong> pts</div>
-        <small class="warn" id="statPuntosProx"> </small>
+        <small class="warn" id="statPuntosProx"></small>
+        <small class="warn" id="statPuntosDetalle"></small>
       </div>
       <div class="stat">
         <h4>⏳ Puntos vencidos</h4>
@@ -120,37 +96,23 @@ a:hover { text-decoration: none; }
     </table>
 
     <div class="redeem-wrap">
-  <a class="btn-cta btn-redeem" href="canjear.html">Canjear puntos</a>
-</div>
-
-
-
+      <a class="btn-cta btn-redeem" href="canjear.html">Canjear puntos</a>
+    </div>
 
     <!-- ===== Video promocional / tutorial (debajo del historial) ===== -->
     <section class="video-card hero">
-  <h3>Promociones para ti</h3>
-  <div class="video-wrap banner-349">
-    <video
-      id="promoVideo"
-      autoplay
-      muted
-      playsinline
-      loop
-      preload="auto"
-      poster="assets/poster.jpg">
-      <source src="Video-Web-Header-R3.mp4" type="video/mp4" />
-    </video>
-  </div>
-</section>
-
-
+      <h3>Promociones para ti</h3>
+      <div class="video-wrap banner-349">
+        <video id="promoVideo" autoplay muted playsinline loop preload="auto" poster="assets/poster.jpg">
+          <source src="Video-Web-Header-R3.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </section>
   </main>
 
   <script>
     const db = firebase.firestore();
     db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-
-    console.log("Proyecto (panel):", firebase.app().options.projectId);
 
     const $ = (id)=>document.getElementById(id);
     const tbody = document.querySelector('#tablaTickets tbody');
@@ -172,17 +134,28 @@ a:hover { text-decoration: none; }
       return d.toLocaleDateString('es-MX', { year:'numeric', month:'2-digit', day:'2-digit' });
     }
     function daysLeft(ts) {
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      const d = ts?.toDate ? ts.toDate() : new Date(ts);
       return Math.ceil((d - new Date()) / 86400000);
     }
-    function renderStats(rows) {
-      let totalTickets=0, visitas=0, ptsActivos=0, ptsVencidos=0, proximos=[];
-      tbody.innerHTML = rows.map(t=>{
+
+    // Estado global
+    let _tickets = [];         // docs de tickets
+    let _redemptions = [];     // docs de redemptions
+
+    function renderTableAndTicketStats() {
+      let totalTickets=0, visitas=0, ptsActivosTickets=0, ptsVencidos=0, proximos=[];
+      const rowsHtml = _tickets.map(t=>{
         totalTickets++; visitas++;
         const pts = (t.puntos && t.puntos.total) || 0;
-        let estatus, left = t.vencePuntos ? daysLeft(t.vencePuntos) : -1;
-        if (!t.vencePuntos || left < 0) { ptsVencidos += pts; estatus = '<span class="chip-exp err">Vencido</span>'; }
-        else { ptsActivos += pts; estatus = '<span class="chip-exp ok">Activo</span>'; if (left<=14 && pts>0) proximos.push({pts,left}); }
+        const left = t.vencePuntos ? daysLeft(t.vencePuntos) : -1;
+        let estatus;
+        if (!t.vencePuntos || left < 0) {
+          ptsVencidos += pts; estatus = '<span class="chip-exp err">Vencido</span>';
+        } else {
+          ptsActivosTickets += pts;
+          estatus = '<span class="chip-exp ok">Activo</span>';
+          if (left<=14 && pts>0) proximos.push({pts,left});
+        }
         return `
           <tr>
             <td>${t.numero||''}</td>
@@ -194,12 +167,46 @@ a:hover { text-decoration: none; }
           </tr>`;
       }).join('');
 
+      tbody.innerHTML = rowsHtml || `<tr><td colspan="6" class="warn">Sin tickets aún.</td></tr>`;
+
       $('statTickets').textContent = totalTickets;
       $('statVisitas').textContent = visitas;
-      $('statPuntosActivos').textContent = ptsActivos;
       $('statPuntosVencidos').textContent = ptsVencidos;
+
+      // Guardamos en window para que updateHeaderStats lo use sin recalcular
+      window.__ptsActivosTickets = ptsActivosTickets;
+      window.__proximos = proximos;
+
+      updateHeaderStats();
+    }
+
+    function updateHeaderStats() {
+      const ptsActivosTickets = window.__ptsActivosTickets || 0;
+      const proximos = window.__proximos || [];
+
+      // Cálculo de redemptions
+      const now = new Date();
+      const spentByRedeemed = _redemptions
+        .filter(r => r.status === 'canjeado')
+        .reduce((a,r)=> a + (Number(r.cost)||0), 0);
+
+      const reservedPending = _redemptions
+        .filter(r => r.status === 'pendiente')
+        .filter(r => {
+          const exp = r.expiresAt?.toDate ? r.expiresAt.toDate() : (r.expiresAt ? new Date(r.expiresAt) : null);
+          return exp && exp > now;
+        })
+        .reduce((a,r)=> a + (Number(r.cost)||0), 0);
+
+      const disponibles = Math.max(0, ptsActivosTickets - spentByRedeemed - reservedPending);
+
+      $('statPuntosActivos').textContent = disponibles;
       $('statPuntosProx').textContent = proximos.length
         ? `⚠️ ${proximos.reduce((a,b)=>a+b.pts,0)} pts vencen en ~${Math.min(...proximos.map(p=>p.left))} día(s).`
+        : '';
+      $('statPuntosDetalle').textContent =
+        (reservedPending>0 || spentByRedeemed>0)
+        ? `Reservados: ${reservedPending} pts · Canjeados: ${spentByRedeemed} pts`
         : '';
     }
 
@@ -215,21 +222,18 @@ a:hover { text-decoration: none; }
         return;
       }
 
-      console.log("UID (panel):", user.uid);
       $('userGreeting').textContent = `Hola, ${user.displayName||user.email}`;
 
-      const ref = db.collection('users').doc(user.uid).collection('tickets');
+      // TICKETS
+      const tRef = db.collection('users').doc(user.uid).collection('tickets');
       try {
-        ref.orderBy('fecha','desc').onSnapshot(
-          (snap) => {
-            const rows = snap.docs.map(d=>d.data());
-            renderStats(rows);
-          },
+        tRef.orderBy('fecha','desc').onSnapshot(
+          (snap) => { _tickets = snap.docs.map(d=>d.data()); renderTableAndTicketStats(); },
           (err) => {
-            console.warn("onSnapshot con orderBy(fecha) falló:", err);
+            console.warn("onSnapshot orderBy(fecha) falló:", err);
             // Fallback sin orderBy
-            ref.onSnapshot(
-              (snap2) => renderStats(snap2.docs.map(d=>d.data())),
+            tRef.onSnapshot(
+              (snap2) => { _tickets = snap2.docs.map(d=>d.data()); renderTableAndTicketStats(); },
               (err2) => showError("Error leyendo tickets: "+err2.message)
             );
           }
@@ -237,17 +241,38 @@ a:hover { text-decoration: none; }
       } catch (e) {
         showError("Error iniciando lectura: "+e.message);
       }
+
+      // REDEMPTIONS (para descontar reservados/canjeados)
+      const rRef = db.collection('users').doc(user.uid).collection('redemptions');
+      try {
+        rRef.orderBy('createdAt','desc').onSnapshot(
+          (snap) => {
+            _redemptions = snap.docs.map(d=>d.data());
+            updateHeaderStats();
+          },
+          (err) => {
+            console.warn("onSnapshot orderBy(createdAt) falló:", err);
+            rRef.onSnapshot(
+              (snap2) => { _redemptions = snap2.docs.map(d=>d.data()); updateHeaderStats(); },
+              (err2) => console.error("Error leyendo redemptions:", err2)
+            );
+          }
+        );
+      } catch (e) {
+        console.error("Error iniciando lectura redemptions:", e);
+      }
     });
 
-   (function(){
-    const v = document.getElementById('promoVideo');
-    if(!v) return;
-    function tryPlay(){ v.play().catch(()=>{}); }
-    v.addEventListener('loadedmetadata', tryPlay);
-    v.addEventListener('canplay', tryPlay);
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tryPlay(); });
-    window.addEventListener('focus', tryPlay);
-  })();
+    // Autoplay del video
+    (function(){
+      const v = document.getElementById('promoVideo');
+      if(!v) return;
+      function tryPlay(){ v.play().catch(()=>{}); }
+      v.addEventListener('loadedmetadata', tryPlay);
+      v.addEventListener('canplay', tryPlay);
+      document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tryPlay(); });
+      window.addEventListener('focus', tryPlay);
+    })();
   </script>
 </body>
 </html>
