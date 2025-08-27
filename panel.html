@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="manzanas.png">
+  <link rel="stylesheet" href="registrar.css" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    .dashboard { max-width: 980px; margin: 110px auto 60px; padding: 16px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat { background: rgba(25,25,25,.7); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:16px; }
+    .stat h4 { margin-bottom: 6px; color:#ffd4d4; }
+    table { width:100%; border-collapse: collapse; font-size:14px; background: rgba(25,25,25,.6); border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow: hidden; }
+    th, td { padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.08); }
+    th { text-align:left; color:#ffd4d4; }
+    .chip-exp { padding:4px 8px; border-radius:999px; font-weight:700; }
+    .ok { color:#9be49b; }
+    .warn { color:#ffdfaa; }
+    .err { color:#ff9a9a; }
+
+    /* Botón rojo Salir en header */
+    .right-section .btn-logout { margin-left: 8px; padding: 10px 16px; }
+
+    /* ==== Sección de video ==== */
+    .video-card {
+      margin-top: 22px;
+      background: rgba(25,25,25,.7);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:16px;
+    }
+    .video-card h3 {
+      margin-bottom: 10px;
+      color:#ffd4d4;
+    }
+    .video-wrap {
+      width: 100%;
+      aspect-ratio: 16 / 9;     /* responsive */
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .video-wrap video, .video-wrap iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #000;
+    }
+
+
+       /* Centrar el botón en el contenido */
+.redeem-wrap{
+  display: flex;
+  justify-content: center; /* centra horizontal */
+  align-items: center;      /* centra vertical dentro de la fila */
+  margin: 16px 0 24px;
+}
+a { text-decoration: none; }
+a:hover { text-decoration: none; }
+
+
+
+  </style>
+</head>
+<body class="bg-animated">
+  <header class="top-bar">
+    <div class="left-section"><h1 class="applebees-title">Applebee’s</h1></div>
+    <div class="center-section"><p id="userGreeting">Panel</p></div>
+    <div class="right-section">
+      <a class="btn-secondary" href="registrar.html">+ Registrar ticket</a>
+      <button id="btnLogout" class="btn-cta btn-logout" type="button">Salir</button>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <section class="stats">
+      <div class="stat">
+        <h4>🎟️ Tickets cargados</h4>
+        <div><strong id="statTickets">0</strong></div>
+      </div>
+      <div class="stat">
+        <h4>📍 Visitas realizadas</h4>
+        <div><strong id="statVisitas">0</strong></div>
+      </div>
+      <div class="stat">
+        <h4>⭐ Puntos activos</h4>
+        <div><strong id="statPuntosActivos">0</strong> pts</div>
+        <small class="warn" id="statPuntosProx"> </small>
+      </div>
+      <div class="stat">
+        <h4>⏳ Puntos vencidos</h4>
+        <div><strong id="statPuntosVencidos">0</strong> pts</div>
+      </div>
+    </section>
+
+    <h3 style="margin:10px 0 8px;">Historial de consumos</h3>
+    <table id="tablaTickets">
+      <thead>
+        <tr>
+          <th># Ticket</th>
+          <th>Fecha</th>
+          <th>Total</th>
+          <th>Puntos</th>
+          <th>Vence</th>
+          <th>Estatus</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="redeem-wrap">
+  <a class="btn-cta btn-redeem" href="canjear.html">Canjear puntos</a>
+</div>
+
+
+
+
+    <!-- ===== Video promocional / tutorial (debajo del historial) ===== -->
+    <section class="video-card hero">
+  <h3>Promociones para ti</h3>
+  <div class="video-wrap banner-349">
+    <video
+      id="promoVideo"
+      autoplay
+      muted
+      playsinline
+      loop
+      preload="auto"
+      poster="assets/poster.jpg">
+      <source src="Video-Web-Header-R3.mp4" type="video/mp4" />
+    </video>
+  </div>
+</section>
+
+
+  </main>
+
+  <script>
+    const db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+
+    console.log("Proyecto (panel):", firebase.app().options.projectId);
+
+    const $ = (id)=>document.getElementById(id);
+    const tbody = document.querySelector('#tablaTickets tbody');
+
+    // Salir
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      try {
+        await firebase.auth().signOut();
+        location.href = 'index.html';
+      } catch (e) {
+        console.error('Error al cerrar sesión:', e);
+        alert('No se pudo cerrar sesión. Intenta de nuevo.');
+      }
+    });
+
+    function fmtDate(ts) {
+      if (!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleDateString('es-MX', { year:'numeric', month:'2-digit', day:'2-digit' });
+    }
+    function daysLeft(ts) {
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return Math.ceil((d - new Date()) / 86400000);
+    }
+    function renderStats(rows) {
+      let totalTickets=0, visitas=0, ptsActivos=0, ptsVencidos=0, proximos=[];
+      tbody.innerHTML = rows.map(t=>{
+        totalTickets++; visitas++;
+        const pts = (t.puntos && t.puntos.total) || 0;
+        let estatus, left = t.vencePuntos ? daysLeft(t.vencePuntos) : -1;
+        if (!t.vencePuntos || left < 0) { ptsVencidos += pts; estatus = '<span class="chip-exp err">Vencido</span>'; }
+        else { ptsActivos += pts; estatus = '<span class="chip-exp ok">Activo</span>'; if (left<=14 && pts>0) proximos.push({pts,left}); }
+        return `
+          <tr>
+            <td>${t.numero||''}</td>
+            <td>${fmtDate(t.fecha)}</td>
+            <td>$${Number(t.total||0).toFixed(2)}</td>
+            <td>${pts}</td>
+            <td>${fmtDate(t.vencePuntos)}</td>
+            <td>${estatus}</td>
+          </tr>`;
+      }).join('');
+
+      $('statTickets').textContent = totalTickets;
+      $('statVisitas').textContent = visitas;
+      $('statPuntosActivos').textContent = ptsActivos;
+      $('statPuntosVencidos').textContent = ptsVencidos;
+      $('statPuntosProx').textContent = proximos.length
+        ? `⚠️ ${proximos.reduce((a,b)=>a+b.pts,0)} pts vencen en ~${Math.min(...proximos.map(p=>p.left))} día(s).`
+        : '';
+    }
+
+    function showError(msg) {
+      console.error(msg);
+      tbody.innerHTML = `<tr><td colspan="6" class="err">${msg}</td></tr>`;
+    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) {
+        $('userGreeting').textContent = "Inicia sesión";
+        showError("No hay sesión activa.");
+        return;
+      }
+
+      console.log("UID (panel):", user.uid);
+      $('userGreeting').textContent = `Hola, ${user.displayName||user.email}`;
+
+      const ref = db.collection('users').doc(user.uid).collection('tickets');
+      try {
+        ref.orderBy('fecha','desc').onSnapshot(
+          (snap) => {
+            const rows = snap.docs.map(d=>d.data());
+            renderStats(rows);
+          },
+          (err) => {
+            console.warn("onSnapshot con orderBy(fecha) falló:", err);
+            // Fallback sin orderBy
+            ref.onSnapshot(
+              (snap2) => renderStats(snap2.docs.map(d=>d.data())),
+              (err2) => showError("Error leyendo tickets: "+err2.message)
+            );
+          }
+        );
+      } catch (e) {
+        showError("Error iniciando lectura: "+e.message);
+      }
+    });
+
+   (function(){
+    const v = document.getElementById('promoVideo');
+    if(!v) return;
+    function tryPlay(){ v.play().catch(()=>{}); }
+    v.addEventListener('loadedmetadata', tryPlay);
+    v.addEventListener('canplay', tryPlay);
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tryPlay(); });
+    window.addEventListener('focus', tryPlay);
+  })();
+  </script>
+</body>
+</html>

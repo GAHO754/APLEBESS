@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar Sesión - Applebee's</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="manzanas.png">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body> 
+  <div class="container">
+    <div class="form-card">
+      <h1>Iniciar Sesión</h1>
+
+      <input type="text" id="emailOrPhone" placeholder="Correo o Teléfono (+521...)" />
+      <input type="password" id="password" placeholder="Contraseña" />
+      <button onclick="login()">Entrar</button>
+
+      <p class="link">
+        ¿No tienes cuenta? <a href="register.html">Crear una nueva</a>
+      </p>
+      <p class="link">
+        <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

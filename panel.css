@@ -1,0 +1,375 @@
+/* Reset y fuente */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Fondo con overlay */
+body {
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, sans-serif;
+  color: #fff;
+  background: url('20250716_1721_Repetición de Logotipo_remix_01k0ark684ft69w3ztvtmq2384.png') no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6); /* Oscurece para contraste */
+  z-index: 0;
+}
+main, header, footer {
+  position: relative;
+  z-index: 1;
+}
+
+
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  margin: 120px auto 80px;
+  padding: 20px;
+}
+
+/* 🔝 Barra superior */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(28, 28, 28, 0.85);
+  border-bottom: 1px solid #ff2f2f44;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+#userName {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+#profileCircle {
+  background-color: #ff2f2f;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#profileCircle:hover {
+  background-color: #e22323;
+}
+
+.logout-btn {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #555;
+}
+
+/* 🔧 Tarjetas de panel */
+.panel-option {
+  background-color: #1c1c1c;
+  border-radius: 16px;
+  padding: 25px 30px;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+  margin-bottom: 30px;
+  transition: transform 0.3s ease;
+}
+
+.panel-option:hover {
+  transform: scale(1.02);
+}
+
+/* Títulos de sección */
+.panel-option h2 {
+  margin-bottom: 15px;
+  color: #ff2f2f;
+  font-size: 20px;
+  border-bottom: 1px solid #ff2f2f44;
+  padding-bottom: 8px;
+}
+
+/* Contenido */
+.content-area {
+  background-color: #2c2c2c;
+  border-radius: 10px;
+  padding: 15px;
+  color: #eee;
+  font-size: 15px;
+}
+
+/* 🎁 Botón QR */
+button {
+  padding: 10px 20px;
+  background-color: #ff2f2f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #e22323;
+}
+
+button.secondary {
+  background-color: #444;
+}
+
+button.secondary:hover {
+  background-color: #555;
+}
+
+#qr-container {
+  margin-top: 15px;
+  text-align: center;
+}
+
+/* 🖼️ Modal de edición */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+  background: #1c1c1c;
+  color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 400px;
+  margin: 120px auto;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+  color: #ff2f2f;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background: #333;
+  color: #fff;
+  font-size: 15px;
+}
+
+.modal-content input::placeholder {
+  color: #aaa;
+}
+
+/* 🔻 Footer */
+footer {
+  text-align: center;
+  padding: 15px;
+  color: #ffffff;
+  font-size: 13px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 📱 Responsive */
+@media (max-width: 600px) {
+  main {
+    padding: 10px;
+  }
+
+  .panel-option {
+    padding: 20px;
+  }
+
+  .panel-option h2 {
+    font-size: 18px;
+  }
+
+  #userName {
+    display: none; /* en móvil solo se muestran iniciales */
+  }
+
+  .top-bar {
+    padding: 10px 20px;
+  }
+}
+/* Fuente externa recomendada */
+@import url('https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap');
+
+/* Barra superior elegante */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(28, 28, 28, 0.95);
+  padding: 16px 32px;
+  border-bottom: 1px solid #ff2f2f44;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.left-section,
+.center-section,
+.right-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.left-section {
+  justify-content: flex-start;
+}
+
+.center-section {
+  justify-content: center;
+}
+
+.right-section {
+  justify-content: flex-end;
+}
+
+.applebees-title {
+  font-family: 'Bree Serif', serif;
+  font-size: 32px;
+  color: #f0d9d9;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+#userGreeting {
+  font-size: 20px;
+  color: #ffdfaa;
+  font-weight: 600;
+}
+
+.logout-highlight {
+  background-color: #ff2f2f;
+  color: #fff;
+  font-size: 16px;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.logout-highlight:hover {
+  background-color: #d62020;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.upload-area input[type="file"] {
+  background: #2c2c2c;
+  border: 1px solid #555;
+  padding: 10px;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ticket-result p {
+  margin-bottom: 8px;
+}
+
+.validacion-msg {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #ffdfaa;
+}
+.boton-foto {
+  background-color: #2a6dd2;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  display: inline-block;
+}
+
+/*///////////////////////////registrar.html//////////////////////*/
+/* Botones como enlaces */
+/* Botón innovador para Registrar compra */
+.btn-registrar {
+  display: inline-block;
+  padding: 20px 35px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 50px;
+  background: linear-gradient(45deg, #ff2f2f, #d62020, #ff5555);
+  background-size: 300% 300%;
+  box-shadow: 0 0 20px rgba(255, 47, 47, 0.6);
+  animation: pulseGlow 2s infinite, gradientMove 6s ease infinite;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-registrar:hover {
+  transform: scale(1.1) rotate(-1deg);
+  box-shadow: 0 0 35px rgba(255, 47, 47, 0.9);
+}
+
+/* Animación de brillo */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 47, 47, 0.6), 0 0 40px rgba(255, 47, 47, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(255, 47, 47, 0.8), 0 0 60px rgba(255, 47, 47, 0.5);
+  }
+}
+
+/* Animación del degradado */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+

@@ -1,0 +1,107 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Imagen de fondo + overlay */
+body {
+  background: url('20250825_1311_Logo\ Applebee\'s\ con\ Fondo\ Negro_remix_01k3ha4neweryvkf3pmfc7qtex.png') no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6); /* Oscurece la imagen de fondo */
+  z-index: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  position: relative;
+  z-index: 1; /* Asegura que esté sobre el overlay */
+}
+
+.form-card {
+  background-color: #1c1c1c;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+  text-align: center;
+}
+
+.logo {
+  width: 100px;
+  margin-bottom: 15px;
+}
+
+h1 {
+  margin-bottom: 20px;
+  color: #ff2f2f;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background: #333;
+  color: #fff;
+  font-size: 16px;
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #ff2f2f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #e22323;
+}
+
+button.secondary {
+  background-color: #444;
+}
+
+button.secondary:hover {
+  background-color: #555;
+}
+
+.divider {
+  margin: 20px 0 10px;
+  color: #888;
+  font-size: 14px;
+}
+
+.link a {
+  color: #ff2f2f;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.link a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,271 @@
+/* =========================================================
+   Registrar.css — Unificado (UI roja, modal cámara, catálogo,
+   chips, puntos, estados y animaciones)
+   Fuente: Montserrat
+========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+/* ===== Reset & base ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Montserrat",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+  color:#fff;background:#0f0f10;overflow-x:hidden
+}
+:root{
+  --bg:#0f0f12;
+  --card:rgba(25,25,28,.82);
+  --border:rgba(255,255,255,.08);
+  --txt:#f1f1f1;
+  --muted:#c9c9cf;
+  --brand:#ff2f2f;
+  --cta:#ff2f2f;
+  --cta-2:#2f86ff;
+  --ok:#7fe08a;
+  --warn:#ffd37a;
+  --err:#ff8a8a;
+}
+
+/* ===== Fondo animado con blobs rojos ===== */
+.bg-animated::before,.bg-animated::after{
+  content:"";position:fixed;inset:-20% -10%;z-index:0;
+  background:
+    radial-gradient(40% 40% at 20% 30%,rgba(255,47,47,.35),transparent 60%),
+    radial-gradient(35% 35% at 80% 20%,rgba(214,32,32,.35),transparent 60%),
+    radial-gradient(45% 45% at 70% 75%,rgba(255,85,85,.25),transparent 60%);
+  filter:blur(40px) saturate(120%);
+  animation:floatBG 18s ease-in-out infinite alternate;
+  pointer-events:none
+}
+.bg-animated::after{animation-duration:22s;mix-blend-mode:screen}
+@keyframes floatBG{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(-2%,-3%,0) scale(1.05)}}
+
+/* ===== Top bar ===== */
+.top-bar{
+  position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 32px;background:rgba(18,18,18,.75);
+  backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,47,47,.35)
+}
+.left-section,.center-section,.right-section{flex:1;display:flex;align-items:center}
+.left-section{justify-content:flex-start}
+.center-section{justify-content:center}
+.right-section{justify-content:flex-end}
+.applebees-title{font-size:28px;letter-spacing:.5px;color:#ffe5e5}
+#userGreeting{font-size:18px;color:#ffd9b5;font-weight:700}
+
+/* ===== Botones ===== */
+a.btn-secondary,.btn-secondary{
+  display:inline-block;padding:10px 18px;border-radius:12px;
+  background:#2e2e2e;color:#fff;text-decoration:none;border:1px solid #444;
+  transition:transform .2s ease,background .2s ease
+}
+a.btn-secondary:hover,.btn-secondary:hover{background:#3a3a3a;transform:translateY(-1px)}
+.btn-secondary:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(20%)}
+
+.btn-primary{
+  padding:10px 16px;border-radius:10px;background:var(--cta-2);
+  color:#fff;border:none;cursor:pointer;font-weight:700
+}
+.btn-primary:hover{filter:brightness(1.05)}
+
+/* CTA premium con shimmer + pulse */
+.btn-cta{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  padding:14px 26px;border-radius:14px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#ff2f2f,#d62020,#ff5555);background-size:200% 200%;
+  color:#fff;font-weight:800;letter-spacing:.3px;
+  box-shadow:0 8px 26px rgba(255,47,47,.35);
+  transition:transform .25s ease,box-shadow .25s ease,filter .25s ease;
+  overflow:hidden;isolation:isolate;
+  animation:gradientShift 6s ease infinite,pulseSoft 2.2s ease-in-out infinite
+}
+.btn-cta:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 14px 40px rgba(255,47,47,.45);filter:brightness(1.02)}
+.btn-cta:active{transform:translateY(0) scale(.995)}
+.btn-cta:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(20%)}
+.btn-cta::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.25) 45%,transparent 55%);
+  transform:translateX(-120%);animation:shimmer 3.6s ease-in-out infinite;mix-blend-mode:screen
+}
+@keyframes shimmer{0%{transform:translateX(-120%)}30%,100%{transform:translateX(120%)}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes pulseSoft{0%,100%{box-shadow:0 8px 26px rgba(255,47,47,.35)}50%{box-shadow:0 12px 42px rgba(255,47,47,.55)}}
+
+/* ===== Página / Card ===== */
+.page{position:relative;z-index:1;max-width:920px;margin:120px auto 80px;padding:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(10px);padding:26px 28px}
+.card h2{font-size:22px;margin-bottom:14px;color:#ff6a6a;border-bottom:1px dashed rgba(255,106,106,.35);padding-bottom:8px}
+
+/* ===== Form ===== */
+.upload-area{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.upload-area>label{font-weight:700;font-size:14px;color:#ffd4d4;letter-spacing:.2px}
+
+input[type=text],input[type=number],input[type=date]{
+  width:100%;max-width:520px;padding:12px 14px;border-radius:12px;
+  background:rgba(34,34,36,.8);border:1px solid rgba(255,255,255,.08);
+  color:#fff;outline:none;transition:border .2s ease,box-shadow .2s ease,transform .06s ease
+}
+input:focus{border-color:rgba(255,47,47,.65);box-shadow:0 0 0 4px rgba(255,47,47,.15);transform:translateY(-1px)}
+input:disabled{opacity:.7}
+
+.grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+
+.producto-inputs{display:flex;gap:10px;flex-wrap:wrap}
+.producto-inputs input{flex:1 1 220px}
+
+/* ===== Chips productos ===== */
+.lista-productos{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 10px}
+.chip{display:flex;gap:8px;align-items:center;border:1px solid var(--border);background:rgba(255,255,255,.06);border-radius:999px;padding:6px 10px}
+.chip .qty{display:flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.08)}
+.chip button{border:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;font-size:16px;border-radius:8px;padding:2px 8px;cursor:pointer}
+.chip button:hover{background:rgba(255,255,255,.08)}
+
+/* ===== Dropzone ===== */
+.dropzone{
+  position:relative;width:100%;max-width:520px;background:rgba(34,34,36,.8);
+  border:1.5px dashed rgba(255,255,255,.2);border-radius:14px;padding:18px;text-align:center;color:#ccc;
+  transition:border-color .2s ease,background .2s ease,transform .06s ease
+}
+.dropzone input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.dropzone.drag{border-color:rgba(255,47,47,.7);background:rgba(255,47,47,.06);transform:translateY(-1px)}
+.dropzone img.preview{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);object-fit:contain;border-radius:8px;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.dropzone .btn-primary{padding:10px 16px;border-radius:10px}
+
+/* ===== Catálogo ===== */
+.productos-wrapper{margin-top:18px;background:rgba(20,20,20,.55);border:1px solid var(--border);border-radius:16px;padding:14px;backdrop-filter:blur(8px)}
+.productos-header{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+#buscarProducto{flex:1;padding:12px 14px;border-radius:12px;background:rgba(34,34,36,.8);border:1px solid var(--border);color:#fff;outline:none}
+#buscarProducto:focus{border-color:rgba(255,47,47,.65);box-shadow:0 0 0 4px rgba(255,47,47,.12)}
+.productos-area{display:block}
+
+.productos-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:16px;max-height:420px;overflow:auto;padding-right:6px
+}
+.card-prod,.prod-card{
+  background:rgba(30,30,32,.88);border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:12px;text-align:center;cursor:pointer;
+  transition:transform .15s ease,box-shadow .2s ease,border-color .15s ease;
+  min-height:230px;display:flex;flex-direction:column;justify-content:space-between
+}
+.card-prod:hover,.prod-card:hover{transform:translateY(-3px);box-shadow:0 14px 26px rgba(255,47,47,.18);border-color:rgba(255,47,47,.45)}
+.prod-name{font-size:15px;font-weight:800;color:#ffe2e2}
+.prod-img{width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#222}
+
+/* ===== Puntos ===== */
+.puntos-wrapper{margin-top:14px;background:rgba(20,20,20,.55);border:1px solid var(--border);border-radius:16px;padding:14px;backdrop-filter:blur(8px)}
+.puntos-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tabla-puntos{width:100%;border-collapse:collapse;font-size:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tabla-puntos th,.tabla-puntos td{padding:10px 8px;border-bottom:1px solid var(--border)}
+.tabla-puntos th{text-align:left;color:#ffd4d4;font-weight:700}
+.tabla-puntos tfoot td.right{text-align:right}
+#totalPuntos{font-size:16px;color:#ffd9b5}
+
+/* ===== Mensajes / estados ===== */
+.ticket-result{margin-top:8px;min-height:22px}
+.validacion-msg{min-height:22px;margin-top:6px;font-size:14px;color:var(--muted);font-weight:700}
+.validacion-msg.ok{color:var(--ok)}
+.validacion-msg.err{color:var(--err)}
+.divider{border-color:var(--border);margin:16px 0}
+
+/* ===== Botón Editar manualmente (look ámbar) ===== */
+#btnEditarManual{
+  background:linear-gradient(180deg,rgba(224,58,29,.1),rgba(255,184,120,.06));
+  border:1px solid rgba(228,65,65,.35);color:#f8f8f8;font-weight:700;
+  transition:transform .2s ease,background .2s ease,box-shadow .2s ease,border-color .2s ease
+}
+#btnEditarManual:hover{background:rgba(255,184,120,.16);border-color:rgba(255,184,120,.55);transform:translateY(-1px)}
+#btnEditarManual:active{transform:translateY(0)}
+#btnEditarManual:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(255,184,120,.25)}
+
+/* ===== Modal de cámara ===== */
+.camera-modal{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
+.camera-modal[aria-hidden="false"],.camera-modal.open{display:flex}
+.camera-box{width:min(720px,95vw);background:rgba(20,20,20,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;backdrop-filter:blur(8px);padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.camera-header{display:flex;align-items:center;justify-content:space-between;padding:8px 6px 12px 6px}
+#cameraVideo{width:100%;aspect-ratio:3/4;background:#000;border-radius:12px;max-height:60vh}
+.camera-actions{display:flex;justify-content:center;gap:10px;padding:10px 0 2px}
+
+/* ===== Toast / Loading (opcionales) ===== */
+.toast{
+  position:fixed;left:50%;bottom:32px;transform:translateX(-50%);
+  background:linear-gradient(135deg,#ff2f2f,#d62020);color:#fff;padding:10px 16px;border-radius:12px;
+  box-shadow:0 10px 30px rgba(255,47,47,.35);z-index:1000;animation:toastIn .25s ease
+}
+@keyframes toastIn{from{transform:translateX(-50%) translateY(10px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.loading-dots::after{content:" .";animation:dots 1.4s steps(3,end) infinite}
+@keyframes dots{
+  0%,20%{color:transparent;text-shadow:.25em 0 0 transparent,.5em 0 0 transparent}
+  40%{color:#fff;text-shadow:.25em 0 0 transparent,.5em 0 0 transparent}
+  60%{text-shadow:.25em 0 0 #fff,.5em 0 0 transparent}
+  80%,100%{text-shadow:.25em 0 0 #fff,.5em 0 0 #fff}
+}
+
+/* ===== Footer & Responsive ===== */
+footer{text-align:center;padding:16px;color:#ddd}
+@media(max-width:600px){
+  .page{padding:14px;margin-top:100px}
+  .applebees-title{font-size:22px}
+  #userGreeting{font-size:16px}
+}
+
+
+
+.dropzone { position: relative; }
+
+/* el input invisible queda al fondo */
+.dropzone input[type="file"]{
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:0; cursor:pointer; z-index:0;
+}
+
+/* la imagen de preview en medio */
+.dropzone img.preview{ z-index:1; }
+
+/* el botón “Tomar foto” arriba del todo */
+.dropzone #btnAbrirCamara{
+  position:relative; z-index:2; pointer-events:auto;
+}
+
+
+
+
+/* el input de archivo ahora está oculto; la dropzone NO abre el file picker */
+.dropzone input[type="file"] { display: none !important; }
+
+/* fila de botones */
+.upload-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* por si dejaste un handler de click a dropzone en JS, no lo uses ya */
+
+
+/* Contenedor con la relación real del video: 1920x550 (≈3.49:1) */
+.video-wrap.banner-349{
+  aspect-ratio: 1920 / 550;   /* 👈 clave: coincide con tu video */
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  background: #000;           /* color de fondo por si tarda en cargar */
+  /* opcional: altura máxima para que no se haga gigante en pantallas altas */
+  max-height: 60vh;
+}
+
+/* El video ocupa TODO el contenedor sin distorsión */
+.video-wrap.banner-349 > video{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;         /* muestra TODO el banner sin recorte */
+  object-position: center;
+  display: block;
+}
+
+
+

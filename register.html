@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Cuenta - Applebee's</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="form-card">
+      <h1>Crear Cuenta</h1>
+
+      <input type="text" id="regName" placeholder="Nombre completo" />
+      <input type="email" id="regEmail" placeholder="Correo electrónico" />
+      <input type="tel" id="regPhone" placeholder="Teléfono (opcional)" />
+      <input type="password" id="regPassword" placeholder="Contraseña" />
+      <button onclick="register()">Crear Cuenta</button>
+
+      <p class="link">
+        ¿Ya tienes cuenta? <a href="index.html">Inicia sesión aquí</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
