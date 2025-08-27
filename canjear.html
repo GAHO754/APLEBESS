@@ -15,7 +15,9 @@
   <script src="firebase-config.js"></script>
 
   <!-- QRCode (CDN) -->
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 
   <style>
     .page { max-width: 980px; margin: 110px auto 60px; padding: 16px; }
@@ -140,187 +142,192 @@
   </main>
 
   <script>
-    // ====== Firebase ======
-    const db = firebase.firestore();
-    db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-    const auth = firebase.auth();
+  // ====== Firebase ======
+  const db = firebase.firestore();
+  db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+  const auth = firebase.auth();
 
-    // ====== Utilidades ======
-    const $ = (id)=>document.getElementById(id);
-    const tbody = document.querySelector('#tablaPuntos tbody');
-    function toDate(ts){ return ts?.toDate ? ts.toDate() : (ts ? new Date(ts) : null); }
-    function fmtDate(ts){
-      const d = toDate(ts); if(!d) return '';
-      return d.toLocaleDateString('es-MX', { year:'numeric', month:'2-digit', day:'2-digit' });
+  // ====== Utilidades ======
+  const $ = (id)=>document.getElementById(id);
+  const tbody = document.querySelector('#tablaPuntos tbody');
+  function toDate(ts){ return ts?.toDate ? ts.toDate() : (ts ? new Date(ts) : null); }
+  function fmtDate(ts){
+    const d = toDate(ts); if(!d) return '';
+    return d.toLocaleDateString('es-MX', { year:'numeric', month:'2-digit', day:'2-digit' });
+  }
+  function daysLeft(ts){
+    const d = toDate(ts); if(!d) return -999;
+    return Math.ceil((d - new Date())/86400000);
+  }
+
+  // ====== Catálogo de recompensas ======
+  const REWARDS = [
+    { id:'limonada',    name:'Limonada 16 oz',      cost:100 },
+    { id:'papas',       name:'Papas fritas',        cost:200 },
+    { id:'hamburguesa', name:'Hamburguesa sencilla',cost:300 },
+    { id:'brownie',     name:'Brownie con helado',  cost:450 },
+    { id:'combo-kids',  name:'Combo infantil',      cost:600 },
+  ];
+
+  function renderRewards(){
+    const grid = $('rewardsGrid');
+    grid.innerHTML = REWARDS.map(r => `
+      <article class="reward-card">
+        <h4>${r.name}</h4>
+        <div class="cost">${r.cost} pts</div>
+        <button class="btn-cta" data-reward="${r.id}">Generar QR</button>
+      </article>
+    `).join('');
+  }
+
+  // ====== Render de puntos ======
+  function renderPoints(rows){
+    let ptsActivos = 0, ptsVencidos = 0, proximos = [];
+    const lines = [];
+
+    rows.forEach(t=>{
+      const pts = (t.puntos && t.puntos.total) || 0;
+      if(!pts) return;
+
+      const left = t.vencePuntos ? daysLeft(t.vencePuntos) : -999;
+      const venc = fmtDate(t.vencePuntos);
+      let estatus = 'Vencido';
+
+      if (left >= 0){
+        estatus = 'Activo';
+        ptsActivos += pts;
+        if (left <= 14) proximos.push({pts,left});
+      } else {
+        ptsVencidos += pts;
+      }
+
+      lines.push(`
+        <tr>
+          <td>${pts}</td>
+          <td>${venc || '-'}</td>
+          <td style="font-weight:700; ${estatus==='Activo' ? 'color:#9be49b' : 'color:#ff9a9a'}">${estatus}</td>
+        </tr>
+      `);
+    });
+
+    tbody.innerHTML = lines.length ? lines.join('') : `<tr><td colspan="3" class="warn">Sin puntos registrados.</td></tr>`;
+
+    // Totales
+    const span = $('puntosActivos');
+    span.textContent = ptsActivos.toString();
+    span.dataset.value = ptsActivos;
+
+    $('avisoVencen').textContent = proximos.length
+      ? `⚠️ ${proximos.reduce((a,b)=>a+b.pts,0)} pts vencen en ~${Math.min(...proximos.map(p=>p.left))} día(s).`
+      : '';
+  }
+
+  // ====== Crear canje y mostrar QR (1 sola escritura) ======
+  async function createRedemption(uid, reward){
+    if (typeof QRCode === 'undefined') {
+      throw new Error('La librería QRCode no cargó. Revisa el <script> de qrcode.min.js');
     }
-    function daysLeft(ts){
-      const d = toDate(ts); if(!d) return -999;
-      return Math.ceil((d - new Date())/86400000);
-    }
 
-    // ====== Catálogo de recompensas ======
-    const REWARDS = [
-      { id:'limonada',    name:'Limonada 16 oz',   cost:100 },
-      { id:'papas',       name:'Papas fritas',     cost:200 },
-      { id:'hamburguesa', name:'Hamburguesa sencilla', cost:300 },
-      { id:'brownie',     name:'Brownie con helado',   cost:450 },
-      { id:'combo-kids',  name:'Combo infantil',   cost:600 },
-    ];
+    // Expira en 3 días (usa Timestamp para mayor compat)
+    const expiresAt = new Date(Date.now() + 3*24*60*60*1000);
+    const expiresTs = firebase.firestore.Timestamp.fromDate(expiresAt);
 
-    function renderRewards(){
-      const grid = $('rewardsGrid');
-      grid.innerHTML = REWARDS.map(r => `
-        <article class="reward-card">
-          <h4>${r.name}</h4>
-          <div class="cost">${r.cost} pts</div>
-          <button class="btn-cta" data-reward="${r.id}">Generar QR</button>
-        </article>
-      `).join('');
-    }
+    // Creamos doc con id propio para incluirlo en el payload sin hacer .update()
+    const docRef = db.collection('users').doc(uid).collection('redemptions').doc();
 
-    // ====== Estado de sesión ======
-    auth.onAuthStateChanged(async (user)=>{
-      if(!user){ location.href='index.html'; return; }
+    const payloadObj = {
+      v: 1,
+      brand: "Applebee's",
+      uid: uid,
+      redemptionId: docRef.id,
+      rewardId: reward.id,
+      cost: reward.cost,
+      expISO: expiresAt.toISOString()
+    };
+    const payload = JSON.stringify(payloadObj);
 
-      // Cerrar sesión
-      $('btnLogout').addEventListener('click', async ()=>{
-        try{ await auth.signOut(); location.href='index.html'; }
-        catch(e){ alert('No se pudo cerrar sesión.'); }
-      });
+    // Escritura única
+    await docRef.set({
+      rewardId: reward.id,
+      rewardName: reward.name,
+      cost: reward.cost,
+      status: 'pendiente', // pendiente | canjeado | expirado | cancelado
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt: expiresTs,
+      qrPayload: payload
+    });
 
-      // Cargar tickets y calcular puntos
-      const ref = db.collection('users').doc(user.uid).collection('tickets');
-      try{
-        ref.orderBy('fecha','desc').onSnapshot(
-          (snap)=>{
-            const rows = snap.docs.map(d=>d.data());
-            renderPoints(rows);
-          },
-          (err)=>{
-            // Fallback sin orderBy
-            ref.onSnapshot(
-              (snap2)=>renderPoints(snap2.docs.map(d=>d.data())),
-              (err2)=>showErr('Error leyendo puntos: '+err2.message)
-            );
-          }
-        );
-      }catch(e){ showErr('Error iniciando lectura: '+e.message); }
+    // Render del QR
+    $('qrBox').style.display = 'block';
+    $('rewardName').textContent = reward.name;
+    $('rewardCost').textContent = String(reward.cost);
+    $('qrExpires').textContent = expiresAt.toLocaleDateString('es-MX', {year:'numeric',month:'2-digit',day:'2-digit'});
 
-      // Clicks en recompensas
-      document.getElementById('rewardsGrid').addEventListener('click', async (ev)=>{
-        const btn = ev.target.closest('button[data-reward]');
-        if(!btn) return;
-        const rewardId = btn.getAttribute('data-reward');
-        const r = REWARDS.find(x=>x.id===rewardId);
-        const activos = Number($('puntosActivos').dataset.value || 0);
+    const qrEl = $('qrcode');
+    qrEl.innerHTML = ''; // limpiar anterior
+    new QRCode(qrEl, { text: payload, width: 180, height: 180 });
 
-        if(activos < r.cost){
-          alert(`Te faltan ${r.cost - activos} puntos para canjear ${r.name}.`);
-          return;
+    // (Opcional) scroll hacia el QR
+    $('qrBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ====== ÚNICO onAuthStateChanged (unifica todo) ======
+  auth.onAuthStateChanged(async (user)=>{
+    if(!user){ location.href='index.html'; return; }
+
+    // Botón salir
+    $('btnLogout').addEventListener('click', async ()=>{
+      try{ await auth.signOut(); location.href='index.html'; }
+      catch(e){ alert('No se pudo cerrar sesión.'); }
+    });
+
+    // Pintar catálogo
+    renderRewards();
+
+    // Cargar tickets y calcular puntos
+    const ref = db.collection('users').doc(user.uid).collection('tickets');
+    try{
+      ref.orderBy('fecha','desc').onSnapshot(
+        (snap)=> renderPoints(snap.docs.map(d=>d.data())),
+        (err)=> {
+          console.warn("orderBy(fecha) falló, usando fallback:", err);
+          ref.onSnapshot(
+            (snap2)=>renderPoints(snap2.docs.map(d=>d.data())),
+            (err2)=> showErr('Error leyendo puntos: '+err2.message)
+          );
         }
-        // Crear registro de canje + QR
-        await createRedemption(user.uid, r);
-      });
+      );
+    }catch(e){ showErr('Error iniciando lectura: '+e.message); }
 
-      function showErr(msg){
-        console.error(msg);
-        tbody.innerHTML = `<tr><td colspan="3" class="err">${msg}</td></tr>`;
+    // Clicks en recompensas (con try/catch para mostrar errores)
+    $('rewardsGrid').addEventListener('click', async (ev)=>{
+      const btn = ev.target.closest('button[data-reward]');
+      if(!btn) return;
+
+      const rewardId = btn.getAttribute('data-reward');
+      const r = REWARDS.find(x=>x.id===rewardId);
+      const activos = Number($('puntosActivos').dataset.value || 0);
+
+      if(activos < r.cost){
+        alert(`Te faltan ${r.cost - activos} puntos para canjear ${r.name}.`);
+        return;
+      }
+
+      try{
+        await createRedemption(user.uid, r);
+      }catch(e){
+        console.error(e);
+        const msg = (e && e.message) || String(e);
+        alert("No se pudo generar el QR: " + msg);
       }
     });
 
-    // ====== Render de puntos ======
-    function renderPoints(rows){
-      let ptsActivos = 0, ptsVencidos = 0, proximos = [];
-      const lines = [];
-
-      rows.forEach(t=>{
-        const pts = (t.puntos && t.puntos.total) || 0;
-        if(!pts) return;
-
-        const left = t.vencePuntos ? daysLeft(t.vencePuntos) : -999;
-        const venc = fmtDate(t.vencePuntos);
-        let estatus = 'Vencido';
-
-        if (left >= 0){
-          estatus = 'Activo';
-          ptsActivos += pts;
-          if (left <= 14) proximos.push({pts,left});
-        } else {
-          ptsVencidos += pts;
-        }
-
-        lines.push(`
-          <tr>
-            <td>${pts}</td>
-            <td>${venc || '-'}</td>
-            <td style="font-weight:700; ${estatus==='Activo' ? 'color:#9be49b' : 'color:#ff9a9a'}">${estatus}</td>
-          </tr>
-        `);
-      });
-
-      if (!lines.length){
-        tbody.innerHTML = `<tr><td colspan="3" class="warn">Sin puntos registrados.</td></tr>`;
-      } else {
-        tbody.innerHTML = lines.join('');
-      }
-
-      // Muestra totales
-      const span = $('puntosActivos');
-      span.textContent = ptsActivos.toString();
-      span.dataset.value = ptsActivos;
-
-      $('avisoVencen').textContent = proximos.length
-        ? `⚠️ ${proximos.reduce((a,b)=>a+b.pts,0)} pts vencen en ~${Math.min(...proximos.map(p=>p.left))} día(s).`
-        : '';
+    function showErr(msg){
+      console.error(msg);
+      tbody.innerHTML = `<tr><td colspan="3" class="err">${msg}</td></tr>`;
     }
+  });
+</script>
 
-    // ====== Crear canje y mostrar QR ======
-    async function createRedemption(uid, reward){
-      const expiresAt = new Date(Date.now() + 3*24*60*60*1000); // +3 días
-      const redRef = await db.collection('users').doc(uid).collection('redemptions').add({
-        rewardId: reward.id,
-        rewardName: reward.name,
-        cost: reward.cost,
-        status: 'pendiente',          // pendiente | canjeado | expirado | cancelado
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        expiresAt: expiresAt,
-      });
-
-      // Payload del QR (simple). Puedes cambiar a una URL de validación más adelante.
-      const payload = JSON.stringify({
-        v: 1,
-        brand: "Applebee's",
-        uid: uid,
-        redemptionId: redRef.id,
-        rewardId: reward.id,
-        cost: reward.cost,
-        expISO: expiresAt.toISOString()
-      });
-
-      await redRef.update({ qrPayload: payload });
-
-      // Render del QR
-      $('qrBox').style.display = 'block';
-      $('rewardName').textContent = reward.name;
-      $('rewardCost').textContent = reward.cost + '';
-      $('qrExpires').textContent = expiresAt.toLocaleDateString('es-MX', {year:'numeric',month:'2-digit',day:'2-digit'});
-
-      const qrEl = $('qrcode');
-      qrEl.innerHTML = ''; // limpiar anterior
-      new QRCode(qrEl, { text: payload, width: 180, height: 180 });
-
-      // (Opcional) scroll hacia el QR
-      $('qrBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    auth.onAuthStateChanged(async (user)=>{
-  if(!user){ location.href='index.html'; return; }
-
-  // <-- AGREGA ESTA LÍNEA:
-  renderRewards();
-
-  // …lo demás (listeners, lectura de puntos, etc.)
-});
-
-  </script>
 </body>
 </html>
